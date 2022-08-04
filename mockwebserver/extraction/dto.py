@@ -1,0 +1,1 @@
+# Contains the data transfer object(s) between threads (and maybe processes if threads don't work out)
