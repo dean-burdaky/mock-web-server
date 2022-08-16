@@ -6,7 +6,7 @@
 from typing import Tuple, Optional, Sequence, Dict, Any
 
 from twisted.web.server import Request as Tw_Request
-from parse import search as Pa_search, Result as Pa_Result
+from parse import parse as Pa_parse, Result as Pa_Result
 
 class Extract:
   def __init__(self, fixed : Sequence[Any], named : Dict[str, Any]):
@@ -18,33 +18,26 @@ class Extractor:
     raise NotImplementedError()
 
 class PathExtractor:
-  def __init__(self, pattern : str, fixedStart : bool = True, fixedEnd : bool = True, caseSensitive : bool = True):
+  def __init__(self, pattern : str):
     self.pattern = pattern
-    self.fixedStart = fixedStart
-    self.fixedEnd = fixedEnd
-    self.caseSensitive = caseSensitive
   
-  def extractData(self, request : Tw_Request, calcRegion : bool = False) -> Optional[Extract]:
-    anyCounter = 0
+  def extractData(self, request : Tw_Request) -> Optional[Extract]:
     pattern = self.pattern
-    path = request.path
-    if path[-1] != '/':
-      path += '/'
-    if self.fixedEnd and pattern[-1] != '/':
+    if not pattern.endswith('/'):
       pattern += '/'
-    index = 0
-    while index >= 0:
-      index = pattern.find("{_any}", index)
-      if index >= 0:
-        closeIndex = pattern.find('}', index)
-        pattern = pattern[:closeIndex] + str(anyCounter) + pattern[closeIndex:]
-        anyCounter += 1
-        index = closeIndex
-    if self.fixedStart:
-      pattern = "::START::/" + pattern
-      path = "::START::/" + path
-    if self.fixedEnd:
-      pattern += "/::END::"
-      path += "/::END::"
-    result = Pa_search(pattern, path, case_sensitive=self.caseSensitive)
-    return Extract(result.fixed, result.named) if isinstance(result, Pa_Result) else None
+    path = request.path
+    if not pattern.endswith('/'):
+      path += '/'
+    result = Pa_search(pattern, path, case_sensitive=True)
+    if not isinstance(result, Pa_Result):
+      return None
+    named = {}
+    for key in result.named:
+      if key.startswith("PATH_"):
+        named[key[5:]] = result.named[key]
+      else:
+        if '/' in result.named[key]:
+          return None
+        named[key] = result.named[key]
+        
+    return Extract(result.fixed, named)
