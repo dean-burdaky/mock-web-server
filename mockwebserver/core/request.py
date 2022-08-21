@@ -6,7 +6,7 @@ from twisted.web.server import Request as Tw_Request, NOT_DONE_YET as Tw_NOT_DON
 
 from mockwebserver.core.stub import StubManager
 from mockwebserver.stub import Stub
-from mockwebserver.extraction.data import Data, DTO
+from mockwebserver.extraction.data import DTO
 
 class RequestProcessor:
   def __init__(self, stubManager : StubManager):

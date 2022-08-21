@@ -3,13 +3,13 @@
 #   the base stub class that all stubs should be derived from
 #   the default stub class that can be derived from (will still have to implement the render function)
 
+from typing import Dict, Any
+
 from twisted.web.server import Request as Tw_Request
 
-from mockwebserver.extraction.data import Data
-
 class Stub:
-  def __init__(self, id : str):
-    self.id = id
+  def __init__(self, stubId : str):
+    self.id = stubId
 
   def render(self, request : Tw_Request):
     raise NotImplementedError()
@@ -17,8 +17,5 @@ class Stub:
   def matchesRequest(self, request : Tw_Request) -> bool:
     raise NotImplementedError()
 
-  def extractData(self, request : Tw_Request) -> Data:
+  def extractData(self, request : Tw_Request) -> Dict[str, Any]:
     raise NotImplementedError()
-
-class DefaultStub (Stub):
-  def __init__(self, id : str, *matchers : Matcher):

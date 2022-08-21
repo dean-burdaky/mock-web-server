@@ -4,8 +4,6 @@ from twisted.web.server import Request as Tw_Request
 
 from mockwebserver.stub import Stub
 
-Data = Dict[str, Any]
-
 class DTO:
   def __init__(self, request : Tw_Request, stub : Stub, data : Data):
     self.request = request

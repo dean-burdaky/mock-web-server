@@ -8,7 +8,8 @@ from typing import Type
 
 from twisted.web.server import Request as Tw_Request
 
-from mockwebserver.extraction.extractor import Extract, Extractor, PathExtractor
+from mockwebserver.extraction.extractor import Extract, Extractor
+from mockwebserver.extraction.header import PathExtractor
 
 class Matcher:
   def __init__(self, extractor : Extractor):
@@ -19,9 +20,6 @@ class Matcher:
     return isinstance(result, Extract)
 
 class PathMatcher (Matcher):
-  def __init__(self, pattern : str, fixedStart : bool = True, fixedEnd : bool = True, caseSensitive : bool = True):
-    super().__init__(PathExtractor(pattern, fixedStart, fixedEnd, caseSensitive))
+  def __init__(self, pattern : str):
+    super().__init__(PathExtractor(pattern))
     self.pattern = pattern
-    self.fixedStart = fixedStart
-    self.fixedEnd = fixedEnd
-    self.caseSensitive = caseSensitive

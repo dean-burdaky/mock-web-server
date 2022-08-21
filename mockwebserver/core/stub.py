@@ -23,16 +23,18 @@ class StubManager:
     return self._stubs[index]
 
   def findStubIndex(self, stubId : str) -> int:
-    return self._stub_ids.index(stubId)
+    return self._stub_ids.index(stubId) if self.hasStub(stubId) else -1
 
   def findStub(self, stubId : str) -> Optional[Stub]:
     index = self.findStubIndex(stubId)
     return self.getStub(index)
 
   def hasStub(self, stubId : str) -> bool:
-    return self.findStubIndex(stubId) >= 0
+    return stubId in self._stub_ids
 
   def addStub(self, stub : Stub) -> BoolWithError:
+    if stub == None:
+      raise ValueError()
     if self.hasStub(stub.id):
       return False, "Stub with ID {} has already been added".format(stub.id)
     self._stubs.append(stub)
@@ -40,9 +42,11 @@ class StubManager:
     return True, ""
 
   def addStubs(self, stubs : Iterable[Stub]) -> List[BoolWithError]:
+    if stubs == None:
+      raise ValueError()
     resultList = []
-    for stub in stubs
-      result = self.addStub(stub)
+    for stub in stubs:
+      result = self.addStub(stub) if isinstance(stub, Stub) else (False, "Item is not a stub")
       resultList.append(result)
     return resultList
 
@@ -69,7 +73,7 @@ class StubManager:
     index = self.findStubIndex(stubId)
     if index < 0:
       return None
-   return self.removeStubAt(index)
+    return self.removeStubAt(index)
 
   def removeAllStubs(self) -> List[Stub]:
     stubs = self._stubs
@@ -94,6 +98,8 @@ class StubManager:
     return self.replaceStubAt(index)
 
   def findStubForRequest(self, request : Tw_Request) -> Optional[Stub]:
+    if request == None:
+      raise ValueError()
     for stub in self._stubs:
       if stub.matchesRequest(request):
         return stub
