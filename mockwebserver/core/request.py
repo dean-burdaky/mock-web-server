@@ -13,6 +13,8 @@ class RequestProcessor:
     self._stubManager = stubManager
 
   def processRequest(self, request : Tw_Request) -> DTO:
+    if request == None:
+      raise ValueError()
     stub = self._stubManager.findStubForRequest(request)
     data = None
     if isinstance(stub, Stub):
