@@ -29,7 +29,7 @@ class TestRender (unittest.TestCase):
     literal = None
     with mock.patch("mockwebserver.core.request.Tw_deferToThread") as Mock_Tw_deferToThread:
       mockDefered = mock.NonCallableMock(Tw_Deferred)
-      mockDefered.addCallback = mock.Mock()
+      mockDefered.addCallback = mock.Mock(return_value=mockDefered)
       Mock_Tw_deferToThread.return_value = mockDefered
 
       literal = requestDelegator.render(request)
@@ -50,24 +50,24 @@ class TestRender (unittest.TestCase):
       literal = requestDelegator.render(request)
 
       Mock_Tw_deferToThread.assert_called_once_with(requestDelegator._requestProcessor.processRequest, request)
+    self.assertIsInstance(literal, bytes)
     self.assertRegex(literal.decode(), "Failed to defer request to (a )?thread")
     request.setResponseCode.assert_called_once_with(INTERNAL_SERVER_ERROR)
 
-  ''' WIP
-
-  def testRenderWithTwistedDeferingToThreadAndAddingCallbackFailed(self):
+  def testRenderWithAddingCallbackFailed(self):
     request = mock.NonCallableMock()
     stubManager = mock.NonCallableMock()
     requestDelegator = RequestDelegator(stubManager)
     literal = None
-    with mock.patch("request.Tw_deferToThread") as Mock_Tw_deferToThread:
-      mockDefered = mock.NonCallableMock()
-      mockDefered.addCallback = mock.Mock()
+    with mock.patch("mockwebserver.core.request.Tw_deferToThread") as Mock_Tw_deferToThread:
+      mockDefered = mock.NonCallableMock(Tw_Deferred)
+      mockDefered.addCallback = mock.Mock(return_value=None)
       Mock_Tw_deferToThread.return_value = mockDefered
 
       literal = requestDelegator.render(request)
 
       Mock_Tw_deferToThread.assert_called_once_with(requestDelegator._requestProcessor.processRequest, request)
       mockDefered.addCallback.assert_called_once_with(requestDelegator._requestProcessor.stubRender)
-    self.assertEqual(literal, Tw_NOT_DONE_YET)
-'''
+    self.assertIsInstance(literal, bytes)
+    self.assertRegex(literal.decode(), "Failed to add call( )?back to deferred( object)?")
+    request.setResponseCode.assert_called_once_with(INTERNAL_SERVER_ERROR)
