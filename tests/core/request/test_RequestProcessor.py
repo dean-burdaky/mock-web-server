@@ -17,7 +17,6 @@ class TestProcessRequest (unittest.TestCase):
 
   def testProcessRequestWithNoRequest(self):
     request = None
-    stubManager = mock.NonCallableMock()
     requestProcessor = RequestProcessor(self.mockStubManager)
 
     self.assertRaises(ValueError, requestProcessor.processRequest, request)
