@@ -36,10 +36,13 @@ class RequestDelegator (Tw_Resource):
     if request == None:
       raise ValueError()
     deferred = Tw_deferToThread(self._requestProcessor.processRequest, request)
-    if isinstance(deferred, Tw_Deferred):
-      deferred.addCallback(self._requestProcessor.stubRender)
-      # May need to add errback
-      return Tw_NOT_DONE_YET
-    else:
+    if not isinstance(deferred, Tw_Deferred):
       request.setResponseCode(INTERNAL_SERVER_ERROR)
       return b"Failed to defer request to a thread"
+    deferred = deferred.addCallback(self._requestProcessor.stubRender)
+    if not isinstance(deferred, Tw_Deferred):
+      request.setResponseCode(INTERNAL_SERVER_ERROR)
+      return b"Failed to add callback to deferred object"
+    # May need to add errback
+    return Tw_NOT_DONE_YET
+      
