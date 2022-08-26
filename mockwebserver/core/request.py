@@ -1,6 +1,8 @@
+from http.client import INTERNAL_SERVER_ERROR
 from typing import Tuple, Dict, Any
 
 from twisted.internet.threads import deferToThread as Tw_deferToThread
+from twisted.internet.defer import Deferred as Tw_Deferred
 from twisted.web.resource import Resource as Tw_Resource
 from twisted.web.server import Request as Tw_Request, NOT_DONE_YET as Tw_NOT_DONE_YET
 
@@ -28,11 +30,16 @@ class RequestDelegator (Tw_Resource):
   isLeaf = True
 
   def __init__(self, stubManager : StubManager):
-    self._stubManager = stubManager
-    self._requestProcessor = RequestProcessor()
+    self._requestProcessor = RequestProcessor(stubManager)
 
   def render(self, request : Tw_Request):
+    if request == None:
+      raise ValueError()
     deferred = Tw_deferToThread(self._requestProcessor.processRequest, request)
-    deferred.addCallback(self._requestProcessor.stubRender)
-    # May need to add errback
-    return Tw_NOT_DONE_YET
+    if isinstance(deferred, Tw_Deferred):
+      deferred.addCallback(self._requestProcessor.stubRender)
+      # May need to add errback
+      return Tw_NOT_DONE_YET
+    else:
+      request.setResponseCode(INTERNAL_SERVER_ERROR)
+      return b"Failed to defer request to a thread"
