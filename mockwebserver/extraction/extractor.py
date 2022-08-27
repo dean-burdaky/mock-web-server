@@ -14,12 +14,18 @@ class Extract:
     self.named = named
 
 class Extractor:
+  def getId(self) -> str:
+    raise NotImplementedError()
+
   def extractData(self, request : Tw_Request) -> Optional[Extract]:
     raise NotImplementedError()
 
 class PathExtractor (Extractor):
   def __init__(self, pattern : str):
     self.pattern = pattern
+
+  def getId(self) -> str:
+    return "PATH '{}'".format(self.pattern)
   
   def extractData(self, request : Tw_Request) -> Optional[Extract]:
     if request == None:

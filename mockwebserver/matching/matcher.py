@@ -8,12 +8,14 @@ from typing import Type
 
 from twisted.web.server import Request as Tw_Request
 
-from mockwebserver.extraction.extractor import Extract, Extractor
-from mockwebserver.extraction.header import PathExtractor
+from mockwebserver.extraction.extractor import Extract, Extractor, PathExtractor
 
 class Matcher:
   def __init__(self, extractor : Extractor):
     self._extractor = extractor
+
+  def getId(self) -> str:
+    return self._extractor.getId()
 
   def matchesRequest(self, request : Tw_Request) -> bool:
     result = self._extractor.extractData(request)

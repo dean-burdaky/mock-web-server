@@ -1,7 +1,7 @@
-from http.client import INTERNAL_SERVER_ERROR
 import unittest
 from unittest import mock
 
+from http.client import INTERNAL_SERVER_ERROR
 from twisted.web.server import NOT_DONE_YET as Tw_NOT_DONE_YET
 from twisted.internet.defer import Deferred as Tw_Deferred
 
