@@ -5,7 +5,7 @@
 #   method matcher
 
 from enum import Enum
-from typing import Sequence, Union
+from typing import Tuple, Union, Any
 
 from twisted.web.server import Request as Tw_Request
 
@@ -54,6 +54,6 @@ class MethodMatcher (Matcher):
     return request.method == bytes(self.method.value)
 
 class QueryMatcher (Matcher):
-  def __init__(self, **parameters : Sequence[str]):
-    super().__init__(QueryExtractor(**parameters))
+  def __init__(self, matchSubset : bool = True, *parameters : Tuple[str, Any]):
+    super().__init__(QueryExtractor(matchSubset, *parameters))
     self.parameters = parameters

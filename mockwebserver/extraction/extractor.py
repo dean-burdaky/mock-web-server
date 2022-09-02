@@ -4,11 +4,10 @@
 # the user will likely implement their own request data extraction code
 
 import re
-from typing import Optional, Sequence, Dict, Any, Union
+from typing import Optional, Sequence, Dict, Any, Tuple
 
 from twisted.web.server import Request as Tw_Request
 from parse import parse as Pa_parse, Result as Pa_Result
-
 class Extract:
   def __init__(self, fixed : Sequence[Any], named : Dict[str, Any]):
     self.fixed = fixed
@@ -41,7 +40,9 @@ class PathExtractor (Extractor):
     return Extract(list(result.fixed), result.named) if isinstance(result, Pa_Result) else None
 
 class QueryExtractor (Extractor):
-  def __init__(self, matchSubset : bool = True, **parameters : Sequence[str]):
+  _didNotPop = object()
+  
+  def __init__(self, matchSubset : bool = True, *parameters : Tuple[str, Any]):
     self.matchSubset = matchSubset
     self.parameters = parameters
 
@@ -51,38 +52,34 @@ class QueryExtractor (Extractor):
   def extractData(self, request: Tw_Request) -> Optional[Extract]:
     if request == None:
       raise ValueError()
-    elif len(self.parameters) > len(request.args):
+    params = []
+    for key in request.args:
+      for item in request.args[key]:
+        params.append((key, item))
+    if len(self.parameters) > len(params):
       return None
-    elif not self.matchSubset and len(self.parameters) < len(request.args):
+    elif not self.matchSubset and len(self.parameters) < len(params):
       return None
-    params = request.args.copy()
     extract = Extract([], {})
-    for patternKey in self.parameters:
+    for patternKey, patternValue in self.parameters:
       keyResult = None
       valueResult = None
       matchingRequestKey = None
-      for requestKey in params:
+      for requestKey, requestValue in params:
         keyResult = Pa_parse(patternKey, requestKey, case_sensitive=True)
         if not isinstance(keyResult, Pa_Result):
           continue
-        patternValues = self.parameters[patternKey]
-        requestValues = params[requestKey]
-        if len(patternValues) > len(requestValues):
+        valueResult = Pa_parse(patternValue, requestValue, case_sensitive=True)
+        if not isinstance(valueResult, Pa_Result):
           continue
-        elif not self.matchSubset and len(patternValues) < len(requestValues):
-          continue
-        for index in range(len(patternValues)):
-          valueResult = Pa_parse(patternValues[index], requestValues[index], case_sensitive=True)
-          if isinstance(valueResult, Pa_Result):
-            matchingRequestKey = requestKey
-            break
-      if isinstance(keyResult, Pa_Result) and isinstance(valueResult, Pa_Result) and params.pop(matchingRequestKey, None) != None:
-        extract.fixed.extend(list(keyResult.fixed))
-        extract.fixed.extend(list(valueResult.fixed))
-        extract.named.update(keyResult.named)
-        extract.named.update(valueResult.named)
-      else:
+        matchingRequestKey = requestKey
+        break
+      if not isinstance(matchingRequestKey, str) or params.pop(requestKey, self._didNotPop) == self._didNotPop:
         return None
+      extract.fixed.extend(list(keyResult.fixed))
+      extract.fixed.extend(list(valueResult.fixed))
+      extract.named.update(keyResult.named)
+      extract.named.update(valueResult.named)
     return extract
       
 
